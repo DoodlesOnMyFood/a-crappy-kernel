@@ -28,7 +28,6 @@ uint8_t Port8Bit::Read()
 {
     uint8_t result;
     __asm__ volatile("inb %1, %0" : "=a" (result) : "Nd" (portnumber));
-    return result;
 }
 
 Port8BitSlow::Port8BitSlow(uint16_t portnumber)
@@ -65,7 +64,6 @@ uint16_t Port16Bit::Read()
 {
     uint16_t result;
     __asm__ volatile("inw %1, %0" : "=a" (result) : "Nd" (portnumber));
-    return result;
 }
 
 
@@ -89,5 +87,4 @@ uint32_t Port32Bit::Read()
 {
     uint32_t result;
     __asm__ volatile("inl %1, %0" : "=a" (result) : "Nd" (portnumber));
-    return result;
 }
