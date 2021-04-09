@@ -1,12 +1,29 @@
 #include "types.h"
 #include "gdt.h"
 #include "interrupts.h"
+#include "keyboard.h"
+#include "mouse.h"
 
 void printf(char* str)
 {
     static uint16_t * VideoMemory = (uint16_t*)0xb8000;
 
     static uint8_t x = 0, y = 0;
+
+    if(str[0] == '\b'){
+        if(x){
+            x--;
+            printf(" ");
+            x--;
+            return;
+        }else if(y){
+            y--;
+            x = 80;
+            printf(" ");
+            x = 80;
+            return;
+        }
+    }
 
 
     for(int i = 0; str[i] != '\0'; ++i){
@@ -60,6 +77,9 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t multiboot_m
 
     GlobalDescriptorTable gdt;
     InterruptManager interrupts(0x20, &gdt);
+    
+    KeyboardDriver keyboard(&interrupts);
+    MouseDriver mouse(&interrupts);
 
     interrupts.Activate();
 
