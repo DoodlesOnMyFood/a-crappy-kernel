@@ -3,6 +3,7 @@
 
 
 void printf(char* str);
+void printfHex(uint8_t);
 
 
 
@@ -167,12 +168,9 @@ uint32_t InterruptManager::DoHandleInterrupt(uint8_t interrupt, uint32_t esp)
     if(handlers[interrupt] != 0){
         esp = handlers[interrupt]->HandleInterrupt(esp);
     }else if(interrupt != 0x20){
-        char* foo = "INTERRUPT 0x00";
-        char* hex = "0123456789ABCDEF";     
-
-        foo[12] = hex[(interrupt >> 4) & 0xF];
-        foo[13] = hex[interrupt & 0xF];
-        printf(foo);
+        printf("UNHANDLED INTERRUPT 0x");
+        printfHex(interrupt);
+        printf(" ");
     }
     if(hardwareInterruptOffset <= interrupt && interrupt < hardwareInterruptOffset+16)
     {
