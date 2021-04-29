@@ -11,6 +11,7 @@ objects = obj/loader.o \
 	obj/kernel.o \
 	obj/drivers/driver.o \
 	obj/hardwarecommunication/port.o \
+	obj/hardwarecommunication/pci.o \
 	obj/hardwarecommunication/interrupts.o \
 	obj/interruptstubs.o
 

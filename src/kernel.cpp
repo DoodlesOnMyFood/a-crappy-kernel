@@ -4,6 +4,7 @@
 #include <drivers/keyboard.h>
 #include <drivers/mouse.h>
 #include <drivers/driver.h>
+#include <hardwarecommunication/pci.h>
 
 using namespace myos;
 using namespace myos::common;
@@ -142,6 +143,9 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t multiboot_m
     drvManager.AddDriver(&keyboard);
     MouseDriver mouse(&interrupts, &mousehandler);
     drvManager.AddDriver(&mouse);
+    PeripheralComponentInterconnectController PCIcontroller;
+    PCIcontroller.SelectDrivers(&drvManager);
+
 
     printf("Initializing HardWare, Stage 2\n");
     drvManager.ActivateAll();
