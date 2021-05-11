@@ -8,12 +8,13 @@ objects = obj/loader.o \
 	obj/gdt.o \
 	obj/drivers/keyboard.o \
 	obj/drivers/mouse.o \
-	obj/kernel.o \
+	obj/drivers/vga.o \
 	obj/drivers/driver.o \
 	obj/hardwarecommunication/port.o \
 	obj/hardwarecommunication/pci.o \
 	obj/hardwarecommunication/interrupts.o \
-	obj/interruptstubs.o
+	obj/interruptstubs.o \
+	obj/kernel.o 
 
 
 obj/%.o: src/%.cpp
