@@ -8,6 +8,7 @@
 #include <hardwarecommunication/pci.h>
 #include <gui/desktop.h>
 #include <gui/window.h>
+#include <multitask.h>
 
 //#define GRAPHICS_MODE
 
@@ -123,6 +124,14 @@ class MouseToConsole : public MouseEventHandler{
 
 };
 
+void taskA(){
+    while(1)
+        printf("A");
+}
+void taskB(){
+    while(1)
+        printf("B");
+}
 
 typedef void (*constructor)();
 extern "C" constructor start_ctors;
@@ -140,7 +149,14 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t multiboot_m
     printf("Hello World! --- http://www.AlgorithMan.de\n");
 
     GlobalDescriptorTable gdt;
-    InterruptManager interrupts(0x20, &gdt);
+
+    TaskManager taskManager;
+    Task task1(&gdt, taskA);
+    Task task2(&gdt, taskB);
+    taskManager.AddTask(&task1);
+    taskManager.AddTask(&task2);
+
+    InterruptManager interrupts(0x20, &gdt, &taskManager);
     printf("Initializing HardWare, Stage 1\n");
 #ifdef GRAPHICS_MODE
     Desktop desktop(320, 200, 0x0,0x0,0xa8);
@@ -149,14 +165,16 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t multiboot_m
     PrintKeyboardEventHandler kbhandler;
     MouseToConsole mousehandler;
 
-    KeyboardDriver keyboard(&interrupts, &kbhandler);
 #ifdef GRAPHICS_MODE
     KeyboardDriver keyboard(&interrupts, &desktop);
+#else
+    KeyboardDriver keyboard(&interrupts, &kbhandler);
 #endif
     drvManager.AddDriver(&keyboard);
-    MouseDriver mouse(&interrupts, &mousehandler);
 #ifdef GRAPHICS_MODE
     MouseDriver mouse(&interrupts, &desktop);
+#else
+    MouseDriver mouse(&interrupts, &mousehandler);
 #endif
     drvManager.AddDriver(&mouse);
     PeripheralComponentInterconnectController PCIcontroller;
