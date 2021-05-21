@@ -14,6 +14,9 @@ objects = obj/loader.o \
 	obj/hardwarecommunication/pci.o \
 	obj/hardwarecommunication/interrupts.o \
 	obj/interruptstubs.o \
+	obj/gui/desktop.o \
+	obj/gui/widget.o \
+	obj/gui/window.o \
 	obj/kernel.o 
 
 

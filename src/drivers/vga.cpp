@@ -26,7 +26,7 @@ void VideoGraphicsArray::WriteRegisters(uint8_t* registers){
     miscPort.Write(*(registers++));
     for(uint8_t i = 0; i < 5; i++){
         sequencerIndexPort.Write(i);
-        sequencerDataPort.Write(*(registers)++);
+        sequencerDataPort.Write(*(registers++));
     }
     crtcIndexPort.Write(0x03);
     crtcDataPort.Write(crtcDataPort.Read() | 0x80);
@@ -38,16 +38,16 @@ void VideoGraphicsArray::WriteRegisters(uint8_t* registers){
 
     for(uint8_t i = 0; i < 25; i++){
         crtcIndexPort.Write(i);
-        crtcDataPort.Write(*(registers)++);
+        crtcDataPort.Write(*(registers++));
     }
     for(uint8_t i = 0; i < 9; i++){
         graphicsControllerIndexPort.Write(i);
-        graphicsControllerDataPort.Write(*(registers)++);
+        graphicsControllerDataPort.Write(*(registers++));
     }
     for(uint8_t i = 0; i < 21; i++){
         attributeControllerResetPort.Read();
         attributeControllerIndexPort.Write(i);
-        attributeControllerWritePort.Write(*(registers)++);
+        attributeControllerWritePort.Write(*(registers++));
     }
 
     attributeControllerResetPort.Read();
@@ -65,11 +65,11 @@ bool VideoGraphicsArray::SetMode(uint32_t width, uint32_t height, uint32_t depth
         /* MISC */
             0x63,
         /* SEQ */
-            0x03, 0x01, 0x0F, 0x00, 0x06,
+            0x03, 0x01, 0x0F, 0x00, 0x0E,
         /* CRTC */
             0x5F, 0x4F, 0x50, 0x82, 0x54, 0x80, 0xBF, 0x1F,
             0x00, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x9C, 0x0E, 0x8F, 0x28, 0x00, 0x96, 0xB9, 0xE3,
+            0x9C, 0x0E, 0x8F, 0x28, 0x40, 0x96, 0xB9, 0xA3,
             0xFF,
         /* GC */
             0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F,
@@ -82,7 +82,7 @@ bool VideoGraphicsArray::SetMode(uint32_t width, uint32_t height, uint32_t depth
     WriteRegisters(g_320x200x256_modex);
     return true;
 }
-void VideoGraphicsArray::PutPixel(uint32_t x, uint32_t y, uint8_t r, uint8_t g, uint8_t b){
+void VideoGraphicsArray::PutPixel(int32_t x, int32_t y, uint8_t r, uint8_t g, uint8_t b){
     PutPixel(x,y, GetColorIndex(r,g,b));
 }
 
@@ -91,22 +91,33 @@ uint8_t* VideoGraphicsArray::GetFrameBufferSegment(){
     uint8_t segmentNumber = ((graphicsControllerDataPort.Read() >> 2) & 0x3);
     
     switch(segmentNumber){
-        case 0 : return(uint8_t*)0x0;
-        case 1 : return(uint8_t*)0xA0000;
-        case 2 : return(uint8_t*)0xB0000;
-        case 3 : return(uint8_t*)0xB8000;
-        default:
-            break;
+        case 0 : return (uint8_t*)0x0;
+        case 1 : return (uint8_t*)0xA0000;
+        case 2 : return (uint8_t*)0xB0000;
+        case 3 : return (uint8_t*)0xB8000;
+        default: break;
     }
 }
-void VideoGraphicsArray::PutPixel(uint32_t x, uint32_t y, uint8_t colorIndex){
+void VideoGraphicsArray::PutPixel(int32_t x, int32_t y, uint8_t colorIndex){
+    if(x < 0 || 320 <= x || y < 0 || 200 <= y) return;
+
     uint8_t * pixelAddress = GetFrameBufferSegment() + 320*y + x;
     *pixelAddress = colorIndex;
 
 }
 
 uint8_t VideoGraphicsArray::GetColorIndex(uint8_t r, uint8_t g, uint8_t b){
-    if(r == 0x00 && g == 0x00 && b == 0xA8)
-        return 0x01;
+    if(r == 0x00 && g == 0x00 && b == 0x00) return 0x00;// black
+    if(r == 0x00 && g == 0x00 && b == 0xA8) return 0x01;// blue
+    if(r == 0x00 && g == 0xA8 && b == 0x00) return 0x02;// green
+    if(r == 0xa8 && g == 0x00 && b == 0x00) return 0x04;// red
+    if(r == 0xff && g == 0xff && b == 0xff) return 0x3f;// white
 }
 
+void VideoGraphicsArray::FillRectangle(uint32_t x, uint32_t y,uint32_t w, uint32_t h,uint8_t r, uint8_t g, uint8_t b ){
+    for(uint32_t Y = y; Y < y+h; Y++){
+        for(uint32_t X = x; X < x+w; X++){
+            PutPixel(X, Y, r, g, b);
+        }
+    }
+}

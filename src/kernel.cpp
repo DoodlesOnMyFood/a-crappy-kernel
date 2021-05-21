@@ -6,9 +6,15 @@
 #include <drivers/vga.h>
 #include <drivers/driver.h>
 #include <hardwarecommunication/pci.h>
+#include <gui/desktop.h>
+#include <gui/window.h>
+
+//#define GRAPHICS_MODE
+
 
 using namespace myos;
 using namespace myos::common;
+using namespace myos::gui;
 using namespace myos::drivers;
 using namespace myos::hardwarecommunication;
 
@@ -136,31 +142,47 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t multiboot_m
     GlobalDescriptorTable gdt;
     InterruptManager interrupts(0x20, &gdt);
     printf("Initializing HardWare, Stage 1\n");
+#ifdef GRAPHICS_MODE
+    Desktop desktop(320, 200, 0x0,0x0,0xa8);
+#endif
     DriverManager drvManager;
     PrintKeyboardEventHandler kbhandler;
     MouseToConsole mousehandler;
 
     KeyboardDriver keyboard(&interrupts, &kbhandler);
+#ifdef GRAPHICS_MODE
+    KeyboardDriver keyboard(&interrupts, &desktop);
+#endif
     drvManager.AddDriver(&keyboard);
     MouseDriver mouse(&interrupts, &mousehandler);
+#ifdef GRAPHICS_MODE
+    MouseDriver mouse(&interrupts, &desktop);
+#endif
     drvManager.AddDriver(&mouse);
     PeripheralComponentInterconnectController PCIcontroller;
     PCIcontroller.SelectDrivers(&drvManager, &interrupts);
+#ifdef GRAPHICS_MODE
     VideoGraphicsArray vga;
-
+#endif
 
     printf("Initializing HardWare, Stage 2\n");
     drvManager.ActivateAll();
 
     printf("Initializing HardWare, Stage 3\n");
+
+#ifdef GRAPHICS_MODE
+    vga.SetMode(320,200,8);
+
+    Window win1(&desktop, 10, 10, 20, 20, 0xa8, 0, 0);
+    desktop.AddChild(&win1);
+    Window win2(&desktop, 40, 15, 30, 30, 0, 0xa8, 0);
+    desktop.AddChild(&win2);
+#endif
     interrupts.Activate();
 
-    vga.SetMode(320,200,8);
-    for(uint32_t y = 0; y < 200; y++){
-        for(uint32_t x = 0; x < 320; x++){
-            vga.PutPixel(x, y, 0x00, 0x00, 0xA8);
-        }
+    while(1){
+#ifdef GRAPHICS_MODE
+        desktop.Draw(&vga);
+#endif
     }
-
-    while(1);
 }
