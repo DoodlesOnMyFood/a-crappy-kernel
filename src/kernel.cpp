@@ -1,5 +1,6 @@
 #include <common/types.h>
 #include <gdt.h>
+#include <memorymanagement.h>
 #include <hardwarecommunication/interrupts.h>
 #include <drivers/keyboard.h>
 #include <drivers/mouse.h>
@@ -150,11 +151,29 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t multiboot_m
 
     GlobalDescriptorTable gdt;
 
+    uint32_t memUpper = ((uint32_t*)multiboot_structure)[2];
+    
+    size_t heap = 10*1024*1024;
+    MemoryManager memoryManager(heap, (memUpper * 1024) - heap - 10*1024);
+    void * allocated = memoryManager.malloc(1024);
+    printf("heap : 0x");
+    printfHex((heap>>24) & 0xff);
+    printfHex((heap>>16) & 0xff);
+    printfHex((heap>>8) & 0xff);
+    printfHex((heap) & 0xff);
+    
+    printf("\nallocated : 0x");
+    printfHex(((size_t)allocated>>24) & 0xff);
+    printfHex(((size_t)allocated>>16) & 0xff);
+    printfHex(((size_t)allocated>>8) & 0xff);
+    printfHex(((size_t)allocated) & 0xff);
+    printf("\n");
+
     TaskManager taskManager;
-    Task task1(&gdt, taskA);
-    Task task2(&gdt, taskB);
-    taskManager.AddTask(&task1);
-    taskManager.AddTask(&task2);
+//    Task task1(&gdt, taskA);
+//    Task task2(&gdt, taskB);
+//    taskManager.AddTask(&task1);
+//    taskManager.AddTask(&task2);
 
     InterruptManager interrupts(0x20, &gdt, &taskManager);
     printf("Initializing HardWare, Stage 1\n");

@@ -146,12 +146,14 @@ BaseAddressRegister PeripheralComponentInterconnectController::GetBaseAddressReg
 
 
 Driver* PeripheralComponentInterconnectController::GetDriver(PeripheralComponentInterconnectDeviceDescriptor dev, InterruptManager*interrupt){
-    
+   
+    Driver *driver = 0; 
     switch(dev.vender_id)
     {
         case 0x1022: //amd
             switch(dev.device_id){
                 case 0x2000:
+                //driver = new amd_am7c
                     break;
             }
             break;
@@ -171,6 +173,5 @@ Driver* PeripheralComponentInterconnectController::GetDriver(PeripheralComponent
     }
 
     
-
-    return 0;
+    return driver;
 }
